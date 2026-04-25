@@ -1,0 +1,79 @@
+{{- define "user-service.labels" -}}
+app: user
+{{- end }}
+---
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: user-rollout
+  labels:
+    {{- include "user-service.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "user-service.labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "user-service.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: user-cont
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          envFrom:
+            - configMapRef:
+                name: user-config
+            - secretRef:
+                name: user-secret
+  strategy:
+    blueGreen: 
+      activeService: user-svc
+      previewService: user-svc-preview
+      autoPromotionEnabled: false # Manual approval for Prod
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-svc
+  labels:
+    {{- include "user-service.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
+  selector:
+    {{- include "user-service.labels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-svc-preview
+  labels:
+    {{- include "user-service.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: {{ .Values.service.port }}
+      targetPort: {{ .Values.service.port }}
+  selector:
+    {{- include "user-service.labels" . | nindent 4 }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: user-config
+data:
+  PORT: "{{ .Values.service.port }}"
+  NODE_ENV: "production"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: user-secret
+type: Opaque
+stringData:
+  MONGO_URI: {{ .Values.global.mongo.uri | quote }}
+  JWT_SECRET: {{ .Values.global.jwtSecret | quote }}

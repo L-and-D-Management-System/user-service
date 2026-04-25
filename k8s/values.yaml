@@ -1,0 +1,18 @@
+replicaCount: 2
+
+image:
+  repository: chandu554/user_lb_image
+  tag: latest
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 3002
+
+resources:
+  limits:
+    cpu: 200m
+    memory: 512Mi
+  requests:
+    cpu: 100m
+    memory: 256Mi
