@@ -1,3 +1,17 @@
+# name: CI
+
+# on:
+#   push:
+#     branches: [ main, develop ]
+#   workflow_dispatch: # This adds the manual "Run Workflow" button
+
+# jobs:
+#   call-workflow:
+#     uses: L-and-D-Management-System/LnD/.github/workflows/reusable-ci.yaml@main
+#     with:
+#       service_name: user-service
+#       image_name: user-service
+#     secrets: inherit 
 name: CI
 
 on:
