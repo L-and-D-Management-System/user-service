@@ -1,5 +1,5 @@
-name: User Service CI/CD
- 
+name: user-service CI/CD
+
 on:
   pull_request:
     branches:
@@ -7,13 +7,14 @@ on:
   push:
     branches:
       - main
+      - develop
   workflow_dispatch:
     inputs:
       release_tag:
-        description: Release tag in the format notification-service-vX.Y.Z
+        description: Release tag in the format user-service-vX.Y.Z
         required: true
         type: string
- 
+
 jobs:
   ci:
     if: github.event_name != 'workflow_dispatch'
@@ -21,11 +22,9 @@ jobs:
     with:
       trigger_event: ${{ github.event_name }}
       source_sha: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
-      service_name: notification-service
-      image_name: notification-service
-      helm_values_key: notificationService
-      dev_manifest_path: infra/argocd/dev/notification-service.yaml
-      sonar_key: Nimesh-Capstone-Project_Parking-System-NotificationService_6aec921f-7f98-4ab9-b558-3cee978b91a7
+      service_name: user-service
+      image_name: user-service
+      dev_manifest_path: gitops/apps/dev/user-app.yaml
       docker_context: .
       dockerfile_path: ./Dockerfile
       working_directory: .
@@ -33,37 +32,22 @@ jobs:
       SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
       SONAR_URL: ${{ secrets.SONAR_URL }}
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
-      TOKEN: ${{ secrets.TOKEN }}
+      TOKEN: ${{ secrets.GHCR_PAT }}
       EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
       EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
- 
+      DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
+      DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+
   release:
     if: github.event_name == 'workflow_dispatch'
-    uses: Nimesh-Capstone-Project/Parking-System/.github/workflows/reusable-release.yaml@master
+    uses: L-and-D-Management-System/LnD/.github/workflows/reusable-release.yaml@main
     with:
       release_tag: ${{ inputs.release_tag }}
-      service_name: notification-service
-      image_name: notification-service
-      helm_values_key: notificationService
-      dev_manifest_path: infra/argocd/dev/notification-service.yaml
-      prod_manifest_path: infra/argocd/prod/notification-service.yaml
+      service_name: user-service
+      image_name: user-service
+      dev_manifest_path: gitops/apps/dev/user-app.yaml
+      prod_manifest_path: gitops/apps/prod/user-app.yaml
     secrets:
-      TOKEN: ${{ secrets.TOKEN }}
+      TOKEN: ${{ secrets.GHCR_PAT }}
       EMAIL_USERNAME: ${{ secrets.EMAIL_USERNAME }}
       EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
-
-# name: CI
-
-# on:
-#   push:
-#     branches: [ main, develop ]
-#   workflow_dispatch: # This adds the manual "Run Workflow" button
-
-# jobs:
-#   call-workflow:
-#     uses: L-and-D-Management-System/LnD/.github/workflows/reusable-ci.yaml@main
-#     with:
-#       service_name: user-service
-#       image_name: user-service
-#     secrets: inherit 
-#
